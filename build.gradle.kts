@@ -1,4 +1,5 @@
 plugins {
+    id("maven-publish")
     id("java")
     id("com.github.johnrengelman.shadow") version("8.1.1")
 }
