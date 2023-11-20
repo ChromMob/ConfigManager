@@ -15,6 +15,10 @@ public class ConfigManager {
     private final Map<String, Class<?>> configClasses = new HashMap<>();
     private final Map<String, Object> configWrappers = new HashMap<>();
 
+    /**
+     * Creates new instance of ConfigManager
+     * @param configPath Path to store all the configs created by this ConfigManager.
+     */
     public ConfigManager(File configPath) {
         this.configPath = configPath;
         if (!configPath.exists()) {
@@ -27,6 +31,10 @@ public class ConfigManager {
         yaml = new Yaml(dumperOptions);
     }
 
+    /**
+     * Add your config to ConfigManager
+     * @param configWrapper The config you want to add.
+     */
     public void addConfig(ConfigWrapper configWrapper) {
         configWrappers.put(configWrapper.getName(), configWrapper);
         configClasses.put(configWrapper.getName(), configWrapper.getClass());
@@ -34,6 +42,10 @@ public class ConfigManager {
         saveConfig(configWrapper.getName());
     }
 
+    /**
+     * @param name Name of the config you want to get
+     * @return The actual form of ConfigWraper even if you extend it.
+     */
     public <T extends ConfigWrapper> T getConfigWrapper(String name) {
         Object configWrapper = configWrappers.get(name);
         if (configWrapper != null) {
@@ -85,6 +97,10 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Reloads config of specified name.
+     * @param name Name of the config you want to reload.
+     */
     public void reloadConfig(String name) {
         loadConfig(name);
     }
