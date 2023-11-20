@@ -14,6 +14,7 @@ repositories {
 var targetJavaVersion = 8
 var encoding = "UTF-8"
 
+
 java {
     val javaVersion = JavaVersion.toVersion(targetJavaVersion)
     sourceCompatibility = javaVersion
@@ -28,6 +29,17 @@ tasks.compileJava {
         options.release = targetJavaVersion
     }
     options.encoding = encoding
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
 }
 
 dependencies {
