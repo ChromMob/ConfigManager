@@ -10,7 +10,8 @@ public class ConfigKey {
     private final Map<String, ConfigKey> children = new HashMap<>();
     public ConfigKey(String key, Object value) {
         this.key = key;
-        if (value instanceof List<?> list) {
+        if (value instanceof List<?>) {
+            List<?> list = (List<?>) value;
             this.value = null;
             if (!list.isEmpty()) {
                 Object first = list.get(0);
