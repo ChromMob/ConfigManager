@@ -10,6 +10,25 @@ repositories {
     mavenCentral()
 }
 
+var targetJavaVersion = 8
+var encoding = "UTF-8"
+
+java {
+    val javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.compileJava {
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release = targetJavaVersion
+    }
+    options.encoding = encoding
+}
+
 dependencies {
     implementation("org.yaml:snakeyaml:2.2")
 }
