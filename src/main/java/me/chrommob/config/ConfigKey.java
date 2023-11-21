@@ -10,8 +10,11 @@ public class ConfigKey {
     private final Map<String, ConfigKey> children = new HashMap<>();
 
     /**
-     * @param key The key of the entry in config
-     * @param value The value of the entry. Can be value such as int, double or can be another list of ConfigKeys.
+     * Constructs a new ConfigKey with the specified key and value.
+     *
+     * @param key   The key of the entry in the configuration.
+     * @param value The value of the entry. It can be a primitive type (e.g., int,
+     *              double) or a list of ConfigKeys.
      */
     public ConfigKey(String key, Object value) {
         this.key = key;
@@ -33,10 +36,14 @@ public class ConfigKey {
     }
 
     /**
-     * This is useful if you have the same key for many things like checks in anti-cheat, so you can just clone them.
-     * This is used inside the library of you have keys of same name too.
-     * @param newName The key of the cloned ConfigKey
-     * @return Cloned ConfigKey
+     * Creates a clone of the ConfigKey with a new name.
+     *
+     * This method is useful when you have multiple ConfigKeys with the same key and
+     * you want to create a copy of the ConfigKey with a different name.
+     *
+     * @param newName The new name for the cloned ConfigKey.
+     * @return A new ConfigKey instance with the specified name and the same value
+     *         and children as the original ConfigKey.
      */
     public ConfigKey clone(String newName) {
         ConfigKey key = new ConfigKey(newName, value);
@@ -45,29 +52,56 @@ public class ConfigKey {
     }
 
     /**
-     * Mostly for internal use
+     * Adds a child ConfigKey to the current ConfigKey.
+     *
+     * This method is mostly for internal use and is used to add a child ConfigKey
+     * to the current ConfigKey's collection of children.
+     *
+     * @param child The child ConfigKey to be added.
      */
     public void addChild(ConfigKey child) {
         children.put(child.get(), child);
     }
 
     /**
-     * Mostly for internal use
+     * Retrieves the children of the current ConfigKey.
+     *
+     * This method returns a map of the child ConfigKey instances associated with
+     * the current ConfigKey. The keys of the map represent the names of the child
+     * ConfigKeys, and the values represent the corresponding child ConfigKey
+     * objects.
+     *
+     * @return A map of the child ConfigKey instances associated with the current
+     *         ConfigKey.
      */
     public Map<String, ConfigKey> getChildren() {
         return children;
     }
 
     /**
-     * Get key if the ConfigKeys value is a List
+     * Retrieves the child ConfigKey with the specified key.
+     *
+     * This method is used to retrieve a specific child ConfigKey from the current
+     * ConfigKey's collection of children. It is particularly useful when the value
+     * of the current ConfigKey is a list of ConfigKeys, and you want to access a
+     * specific ConfigKey within that list.
+     *
+     * @param key The key of the child ConfigKey to retrieve.
+     * @return The child ConfigKey with the specified key, or null if no such child
+     *         ConfigKey exists.
      */
     public ConfigKey getKey(String key) {
         return children.get(key);
     }
 
     /**
-     * Modifies the config value, the file gets modified too, not just the memory value.
-     * @param value New value of the key
+     * Modifies the value of the ConfigKey.
+     *
+     * This method is used to update the value of the ConfigKey. If the new value is
+     * a map, it recursively updates the values of the child ConfigKeys as well. If
+     * the new value is not a map, it updates the value of the current ConfigKey.
+     *
+     * @param value The new value of the ConfigKey.
      */
     public void setValue(Object value) {
         if (value instanceof Map) {
@@ -84,21 +118,34 @@ public class ConfigKey {
     }
 
     /**
-     * @return The key of the ConfigKey
+     * Retrieves the key of the ConfigKey.
+     *
+     * This method returns the key associated with the current ConfigKey instance.
+     * The key represents the identifier or name of the ConfigKey in the
+     * configuration.
+     *
+     * @return The key of the ConfigKey.
      */
     public String get() {
         return key;
     }
 
     /**
-     * @return Raw Object value for later casting manually
+     * Retrieves the raw object value of the ConfigKey.
+     *
+     * This method returns the raw object value associated with the current
+     * ConfigKey instance. The raw object value can be of any type and may require
+     * manual casting to the desired type.
+     *
+     * @return The raw object value of the ConfigKey.
      */
     public Object getAsObject() {
         return value;
     }
 
     /**
-     * @return String representation of the Object or String itself if the value is String
+     * @return String representation of the Object or String itself if the value is
+     *         String
      */
     public String getAsString() {
         if (value instanceof String) {

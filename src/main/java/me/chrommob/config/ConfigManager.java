@@ -17,7 +17,9 @@ public class ConfigManager {
 
     /**
      * Creates new instance of ConfigManager
-     * @param configPath Path to store all the configs created by this ConfigManager.
+     * 
+     * @param configPath Path to store all the configs created by this
+     *                   ConfigManager.
      */
     public ConfigManager(File configPath) {
         this.configPath = configPath;
@@ -33,6 +35,7 @@ public class ConfigManager {
 
     /**
      * Add your config to ConfigManager
+     * 
      * @param configWrapper The config you want to add.
      */
     public void addConfig(ConfigWrapper configWrapper) {
@@ -57,26 +60,23 @@ public class ConfigManager {
 
     private void loadConfig(String name) {
         File file = new File(configPath, name + ".yml");
-        FileReader reader;
-        try {
-            reader = new FileReader(file);
-        } catch (Exception e) {
-            return;
-        }
         if (!file.exists()) {
             return;
         }
-        Map<String, Object> loadedConfig = yaml.load(reader);
-        if (loadedConfig == null) {
-            return;
+        try (FileReader reader = new FileReader(file)) {
+            Map<String, Object> loadedConfig = yaml.load(reader);
+            if (loadedConfig == null) {
+                return;
+            }
+            ConfigWrapper configWrapper = getConfigWrapper(name);
+            if (configWrapper == null) {
+                return;
+            }
+            configWrapper.setConfig(loadedConfig);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        ConfigWrapper configWrapper = getConfigWrapper(name);
-        if (configWrapper == null) {
-            return;
-        }
-        configWrapper.setConfig(loadedConfig);
     }
-
 
     private void saveConfig(String name) {
         File file = new File(configPath, name + ".yml");
@@ -99,6 +99,7 @@ public class ConfigManager {
 
     /**
      * Reloads config of specified name.
+     * 
      * @param name Name of the config you want to reload.
      */
     public void reloadConfig(String name) {
