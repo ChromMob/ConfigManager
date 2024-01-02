@@ -7,6 +7,7 @@ import java.util.Map;
 public class ConfigKey {
     private String key;
     private Object value;
+    List<String> comments;
     private final Map<String, ConfigKey> children = new HashMap<>();
 
     /**
@@ -33,6 +34,20 @@ public class ConfigKey {
         } else {
             this.value = value;
         }
+    }
+
+    /**
+     * Constructs a new ConfigKey with the specified key, value and comments.
+     *
+     * @param key      The key of the entry in the configuration.
+     * @param value    The value of the entry. It can be a primitive type (e.g.,
+     *                 int,
+     *                 double) or a list of ConfigKeys.
+     * @param comments The comments of the entry in the configuration.
+     */
+    public ConfigKey(String key, Object value, List<String> comments) {
+        this(key, value);
+        this.comments = comments;
     }
 
     /**
@@ -215,5 +230,9 @@ public class ConfigKey {
             return Boolean.parseBoolean((String) value);
         }
         throw new ClassCastException("Cannot cast " + value.getClass().getName() + " to boolean");
+    }
+
+    public List<String> getComments() {
+        return comments;
     }
 }

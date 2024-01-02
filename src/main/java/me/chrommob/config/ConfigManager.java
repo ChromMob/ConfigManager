@@ -90,7 +90,43 @@ public class ConfigManager {
                 file.createNewFile();
             }
             FileWriter writer = new FileWriter(file);
-            yaml.dump(config, writer);
+            String[] lines = yaml.dump(config).split("\n");
+            Map<Integer, ConfigKey> keys = new HashMap<>();
+            for (String line : lines) {
+                int spaces = 0;
+                for (int i = 0; i < line.length(); i++) {
+                    if (line.charAt(i) == ' ') {
+                        spaces++;
+                    } else {
+                        break;
+                    }
+                }
+                ConfigKey key = null;
+                if (spaces == 0) {
+                    key = configWrapper.getKey(line.split(":")[0]);
+                }
+                if (spaces > 0) {
+                    ConfigKey parent = keys.get(spaces - 2);
+                    if (parent != null) {
+                        key = parent.getKey(line.split(":")[0].trim());
+                    }
+                }
+                if (key != null) {
+                    if (key.getComments() != null) {
+                        for (String comment : key.getComments()) {
+                            StringBuilder builder = new StringBuilder();
+                            for (int i = 0; i < spaces; i++) {
+                                builder.append(" ");
+                            }
+                            writer.write(builder.toString() + "# " + comment + "\n");
+                        }
+                    }
+                    keys.put(spaces, key);
+                } else {
+                    System.out.println("Key for line " + line.trim() + " is null (spaces: " + spaces + ")");
+                }
+                writer.write(line + "\n");
+            }
             writer.close();
         } catch (Exception e) {
             e.printStackTrace();
