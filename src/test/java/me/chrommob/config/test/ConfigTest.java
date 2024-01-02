@@ -13,108 +13,81 @@ public class ConfigTest {
         ConfigManager config = new ConfigManager(currentDir);
         config.addConfig(new ConfigWrapper("config", new ArrayList<ConfigKey>() {
             {
-                add(new ConfigKey("test", "test", new ArrayList<String>() {
+                add(new ConfigKey("version", "2.0"));
+                add(new ConfigKey("modules", new ArrayList<ConfigKey>() {
                     {
-                        add("This is an example of a comment");
-                        add("This is another example of a comment");
-                        add("This is the last example of a comment");
+                        add(new ConfigKey("security", new ArrayList<ConfigKey>() {
+                            {
+                                add(new ConfigKey("encryption", "AES-256", new ArrayList<String>() {
+                                    {
+                                        add("Strong encryption algorithm");
+                                        add("Ensures data security");
+                                        add("AES-256 is widely accepted");
+                                    }
+                                }));
+                                add(new ConfigKey("authentication", "JWT"));
+                                add(new ConfigKey("firewall", "enabled", new ArrayList<String>() {
+                                    {
+                                        add("Protects against unauthorized access");
+                                        add("Configurable firewall settings");
+                                        add("Logs access attempts");
+                                    }
+                                }));
+                            }
+                        }));
+                        add(new ConfigKey("database", new ArrayList<ConfigKey>() {
+                            {
+                                add(new ConfigKey("type", "MongoDB"));
+                                add(new ConfigKey("connection", "mongodb://localhost:27017/mydb"));
+                                add(new ConfigKey("indexes", new ArrayList<ConfigKey>() {
+                                    {
+                                        add(new ConfigKey("user", "username", new ArrayList<String>() {
+                                            {
+                                                add("Unique index for user data");
+                                                add("Improves query performance");
+                                                add("Prevents duplicate usernames");
+                                            }
+                                        }));
+                                        add(new ConfigKey("logs", "timestamp"));
+                                    }
+                                }));
+                            }
+                        }));
+                        add(new ConfigKey("logging", new ArrayList<ConfigKey>() {
+                            {
+                                add(new ConfigKey("level", "DEBUG"));
+                                add(new ConfigKey("output", new ArrayList<String>() {
+                                    {
+                                        add("Logs to file and console");
+                                        add("Configurable log output");
+                                        add("Useful for debugging");
+                                    }
+                                }));
+                            }
+                        }));
                     }
                 }));
-                add(new ConfigKey("test2", "test2"));
-                add(new ConfigKey("test3", new ArrayList<ConfigKey>() {
+                add(new ConfigKey("advanced_settings", new ArrayList<ConfigKey>() {
                     {
-                        add(new ConfigKey("test4", "test4", new ArrayList<String>() {
+                        add(new ConfigKey("concurrency", "multi-threaded"));
+                        add(new ConfigKey("caching", new ArrayList<ConfigKey>() {
                             {
-                                add("This is an example of a comment");
-                                add("This is another example of a comment");
-                                add("This is the last example of a comment");
+                                add(new ConfigKey("enabled", "true"));
+                                add(new ConfigKey("size", "512MB"));
+                                add(new ConfigKey("strategy", "LRU", new ArrayList<String>() {
+                                    {
+                                        add("Least Recently Used (LRU) caching");
+                                        add("Improves data access speed");
+                                        add("Optimizes memory usage");
+                                    }
+                                }));
                             }
                         }));
-                        add(new ConfigKey("test5", "test5"));
-                        add(new ConfigKey("test", "test", new ArrayList<String>() {
+                        add(new ConfigKey("performance_tuning", new ArrayList<String>() {
                             {
-                                add("This is an example of a comment");
-                                add("This is another example of a comment");
-                                add("This is the last example of a comment");
-                            }
-                        }));
-                        add(new ConfigKey("test2", new ArrayList<ConfigKey>() {
-                            {
-                                add(new ConfigKey("test4", "test4", new ArrayList<String>() {
-                                    {
-                                        add("This is an example of a comment");
-                                        add("This is another example of a comment");
-                                        add("This is the last example of a comment");
-                                    }
-                                }));
-                                add(new ConfigKey("test5", "test5"));
-                                add(new ConfigKey("test", "test", new ArrayList<String>() {
-                                    {
-                                        add("This is an example of a comment");
-                                        add("This is another example of a comment");
-                                        add("This is the last example of a comment");
-                                    }
-                                }));
-                                add(new ConfigKey("test2", "test2"));
-                                add(new ConfigKey("test3", new ArrayList<ConfigKey>() {
-                                    {
-                                        add(new ConfigKey("test4", "test4", new ArrayList<String>() {
-                                            {
-                                                add("This is an example of a comment");
-                                                add("This is another example of a comment");
-                                                add("This is the last example of a comment");
-                                            }
-                                        }));
-                                        add(new ConfigKey("test5", "test5"));
-                                        add(new ConfigKey("test", "test", new ArrayList<String>() {
-                                            {
-                                                add("This is an example of a comment");
-                                                add("This is another example of a comment");
-                                                add("This is the last example of a comment");
-                                            }
-                                        }));
-                                        add(new ConfigKey("test2", "test2"));
-                                        add(new ConfigKey("test3", new ArrayList<ConfigKey>() {
-                                            {
-                                                add(new ConfigKey("test4", "test4", new ArrayList<String>() {
-                                                    {
-                                                        add("This is an example of a comment");
-                                                        add("This is another example of a comment");
-                                                        add("This is the last example of a comment");
-                                                    }
-                                                }));
-                                                add(new ConfigKey("test5", "test5"));
-                                                add(new ConfigKey("test", "test", new ArrayList<String>() {
-                                                    {
-                                                        add("This is an example of a comment");
-                                                        add("This is another example of a comment");
-                                                        add("This is the last example of a comment");
-                                                    }
-                                                }));
-                                                add(new ConfigKey("test2", "test2"));
-                                                add(new ConfigKey("test3", new ArrayList<ConfigKey>() {
-                                                    {
-                                                        add(new ConfigKey("test4", "test4", new ArrayList<String>() {
-                                                            {
-                                                                add("This is an example of a comment");
-                                                                add("This is another example of a comment");
-                                                                add("This is the last example of a comment");
-                                                            }
-                                                        }));
-                                                        add(new ConfigKey("test5", "test5"));
-                                                        add(new ConfigKey("test", "test", new ArrayList<String>() {
-                                                            {
-                                                                add("This is an example of a comment");
-                                                                add("This is another example of a comment");
-                                                                add("This is the last example of a comment");
-                                                            }
-                                                        }));
-                                                    }
-                                                }));
-                                            }
-                                        }));
-                                    }
-                                }));
+                                add("Fine-tune for specific use cases");
+                                add("Optimize resource utilization");
+                                add("Regularly monitor and adjust settings");
                             }
                         }));
                     }
