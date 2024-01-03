@@ -2,6 +2,7 @@ package me.chrommob.config.test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import me.chrommob.config.ConfigKey;
 import me.chrommob.config.ConfigManager;
@@ -13,7 +14,13 @@ public class ConfigTest {
         ConfigManager config = new ConfigManager(currentDir);
         config.addConfig(new ConfigWrapper("config", new ArrayList<ConfigKey>() {
             {
-                add(new ConfigKey("version", "2.0"));
+                add(new ConfigKey("version", "2.0", new ArrayList<String>() {
+                    {
+                        add("Major version number");
+                        add("Incremented for major changes");
+                        add("Backwards-incompatible changes");
+                    }
+                }));
                 add(new ConfigKey("modules", new ArrayList<ConfigKey>() {
                     {
                         add(new ConfigKey("security", new ArrayList<ConfigKey>() {
@@ -92,8 +99,48 @@ public class ConfigTest {
                         }));
                     }
                 }));
+                add(new ConfigKey("checks", new ArrayList<ConfigKey>() {
+                    {
+                        add(new ConfigKey("AimA", settingConfigKeys()));
+                        add(new ConfigKey("AimB", settingConfigKeys()));
+                        add(new ConfigKey("AimC", settingConfigKeys()));
+                        add(new ConfigKey("KillAura", settingConfigKeys()));
+                        add(new ConfigKey("AntiBot", settingConfigKeys()));
+                        add(new ConfigKey("AntiAFK", settingConfigKeys()));
+                    }
+                }, new ArrayList<String>() {
+                    {
+                        add("Checks to be executed");
+                        add("Enable or disable checks");
+                        add("Fine-tune check settings");
+                    }
+                }));
             }
         }));
 
+    }
+
+    public static List<ConfigKey> settingConfigKeys() {
+        return new ArrayList<ConfigKey>() {
+            {
+                add(new ConfigKey("enabled", true, new ArrayList<String>() {
+                    {
+                        add("Enable or disable this setting");
+                        add("If disabled, this setting will not be used");
+                    }
+                }));
+                add(new ConfigKey("value", 20, new ArrayList<String>() {
+                    {
+                        add("The value of this setting");
+                        add("This value will be used if the setting is enabled");
+                    }
+                }));
+                add(new ConfigKey("command", "say test", new ArrayList<String>() {
+                    {
+                        add("The command to execute");
+                    }
+                }));
+            }
+        };
     }
 }
