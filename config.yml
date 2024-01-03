@@ -42,7 +42,7 @@ checks:
   AimA:
     # Enable or disable this setting
     # If disabled, this setting will not be used
-    enabled: true
+    enabled: false
     # The value of this setting
     # This value will be used if the setting is enabled
     value: 20

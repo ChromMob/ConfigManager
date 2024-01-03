@@ -12,7 +12,17 @@ public class ConfigTest {
     public static void main(String[] args) {
         File currentDir = new File(System.getProperty("user.dir"));
         ConfigManager config = new ConfigManager(currentDir);
-        config.addConfig(new ConfigWrapper("config", new ArrayList<ConfigKey>() {
+        List<String> checks = new ArrayList<String>() {
+            {
+                add("AimA");
+                add("AimB");
+                add("AimC");
+                add("KillAura");
+                add("AntiBot");
+                add("AntiAFK");
+            }
+        };
+        CustomWrapper wrapper = new CustomWrapper("config", new ArrayList<ConfigKey>() {
             {
                 add(new ConfigKey("version", "2.0", new ArrayList<String>() {
                     {
@@ -101,12 +111,9 @@ public class ConfigTest {
                 }));
                 add(new ConfigKey("checks", new ArrayList<ConfigKey>() {
                     {
-                        add(new ConfigKey("AimA", settingConfigKeys()));
-                        add(new ConfigKey("AimB", settingConfigKeys()));
-                        add(new ConfigKey("AimC", settingConfigKeys()));
-                        add(new ConfigKey("KillAura", settingConfigKeys()));
-                        add(new ConfigKey("AntiBot", settingConfigKeys()));
-                        add(new ConfigKey("AntiAFK", settingConfigKeys()));
+                        for (String check : checks) {
+                            add(new ConfigKey(check, settingConfigKeys()));
+                        }
                     }
                 }, new ArrayList<String>() {
                     {
@@ -116,8 +123,17 @@ public class ConfigTest {
                     }
                 }));
             }
-        }));
+        });
 
+        for (String check : checks) {
+            Settings settings = wrapper.getSettings(check);
+            if (settings.isEnabled()) {
+                System.out.println(check + " is enabled with value " + settings.getValue());
+                System.out.println("Command: " + settings.getCommand());
+            } else {
+                System.out.println(check + " is disabled");
+            }
+        }
     }
 
     public static List<ConfigKey> settingConfigKeys() {
@@ -143,4 +159,5 @@ public class ConfigTest {
             }
         };
     }
+
 }
