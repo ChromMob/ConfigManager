@@ -1,6 +1,6 @@
 package me.chrommob.config;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -8,7 +8,7 @@ public class ConfigKey {
     private String key;
     private Object value;
     List<String> comments;
-    private final Map<String, ConfigKey> children = new HashMap<>();
+    private final Map<String, ConfigKey> children = new LinkedHashMap<>();
 
     /**
      * Constructs a new ConfigKey with the specified key and value.

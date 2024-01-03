@@ -11,7 +11,9 @@ public class ConfigWrapper {
     /**
      * Feel free to extend this class and add helper functions the API expects it.
      * Create new config with name and predefined keys
-     * @param name file name of config (the library will create the file for you with that name)
+     * 
+     * @param name file name of config (the library will create the file for you
+     *             with that name)
      * @param keys list of config keys
      */
     public ConfigWrapper(String name, List<ConfigKey> keys) {
@@ -22,7 +24,9 @@ public class ConfigWrapper {
     /**
      * Create new config with name and no keys
      * You are expected to add all the keys to the config later using addKey
-     * @param name file name of config (the library will create the file for you with that name)
+     * 
+     * @param name file name of config (the library will create the file for you
+     *             with that name)
      */
     public ConfigWrapper(String name) {
         this.name = name;
@@ -30,7 +34,9 @@ public class ConfigWrapper {
 
     /**
      * Adds ConfigKey to the config.
-     * You can have duplicate names - the library handles it for you by modifying the name to name_number
+     * You can have duplicate names - the library handles it for you by modifying
+     * the name to name_number
+     * 
      * @param key - ConfigKey that gets added to the config
      */
     public void addKey(ConfigKey key) {
@@ -64,10 +70,11 @@ public class ConfigWrapper {
 
     /**
      * This should not be used by user.
+     * 
      * @param loadedConfig Sets the raw yaml representation of the config to use.
      */
     public void setConfig(Map<String, Object> loadedConfig) {
-            loadedConfig.forEach((name, value) -> {
+        loadedConfig.forEach((name, value) -> {
             ConfigKey key = keys.get(name);
             if (key != null) {
                 key.setValue(value);
@@ -77,6 +84,7 @@ public class ConfigWrapper {
 
     /**
      * This should not be used by user.
+     * 
      * @return The raw representation of the yaml file
      */
     public Map<String, Object> getConfig() {
@@ -93,7 +101,8 @@ public class ConfigWrapper {
             key.getChildren().forEach((name, child) -> {
                 Map<String, Object> childConfig = read(child);
                 if (!childConfig.isEmpty()) {
-                    childConfig.forEach((childName, childValue) -> ((Map<String, Object>) value).put(childName, childValue));
+                    childConfig.forEach(
+                            (childName, childValue) -> ((Map<String, Object>) value).put(childName, childValue));
                 }
             });
         } else {

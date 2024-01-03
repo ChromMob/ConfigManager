@@ -8,88 +8,88 @@ modules:
     # Ensures data security
     # AES-256 is widely accepted
     encryption: AES-256
+    authentication: JWT
     # Protects against unauthorized access
     # Configurable firewall settings
     # Logs access attempts
     firewall: enabled
-    authentication: JWT
   database:
+    type: MongoDB
+    connection: mongodb://localhost:27017/mydb
     indexes:
       # Unique index for user data
       # Improves query performance
       # Prevents duplicate usernames
       user: username
       logs: timestamp
-    connection: mongodb://localhost:27017/mydb
-    type: MongoDB
   logging:
-    output: null
     level: DEBUG
+    output: null
 advanced_settings:
+  concurrency: multi-threaded
   caching:
+    enabled: 'true'
     size: 512MB
     # Least Recently Used (LRU) caching
     # Improves data access speed
     # Optimizes memory usage
     strategy: LRU
-    enabled: 'true'
   performance_tuning: null
-  concurrency: multi-threaded
 # Checks to be executed
 # Enable or disable checks
 # Fine-tune check settings
 checks:
-  AimC:
-    # The value of this setting
-    # This value will be used if the setting is enabled
-    value: 20
+  AimA:
     # Enable or disable this setting
     # If disabled, this setting will not be used
     enabled: true
+    # The value of this setting
+    # This value will be used if the setting is enabled
+    value: 20
     # The command to execute
     command: say test
   AimB:
-    # The value of this setting
-    # This value will be used if the setting is enabled
-    value: 20
     # Enable or disable this setting
     # If disabled, this setting will not be used
     enabled: true
+    # The value of this setting
+    # This value will be used if the setting is enabled
+    value: 20
+    # The command to execute
+    command: say test
+  AimC:
+    # Enable or disable this setting
+    # If disabled, this setting will not be used
+    enabled: true
+    # The value of this setting
+    # This value will be used if the setting is enabled
+    value: 20
     # The command to execute
     command: say test
   KillAura:
-    # The value of this setting
-    # This value will be used if the setting is enabled
-    value: 20
     # Enable or disable this setting
     # If disabled, this setting will not be used
     enabled: true
-    # The command to execute
-    command: say test
-  AimA:
     # The value of this setting
     # This value will be used if the setting is enabled
     value: 20
-    # Enable or disable this setting
-    # If disabled, this setting will not be used
-    enabled: true
     # The command to execute
     command: say test
   AntiBot:
-    # The value of this setting
-    # This value will be used if the setting is enabled
-    value: 20
     # Enable or disable this setting
     # If disabled, this setting will not be used
     enabled: true
+    # The value of this setting
+    # This value will be used if the setting is enabled
+    value: 20
     # The command to execute
     command: say test
   AntiAFK:
-    # The value of this setting
-    # This value will be used if the setting is enabled
-    value: 20
     # Enable or disable this setting
     # If disabled, this setting will not be used
     enabled: true
+    # The value of this setting
+    # This value will be used if the setting is enabled
+    value: 20
     # The command to execute
     command: say test
