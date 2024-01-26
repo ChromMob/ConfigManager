@@ -125,6 +125,15 @@ public class ConfigTest {
             }
         });
 
+        List<ConfigKey> listList = new ArrayList<>();
+        listList.add(new ConfigKey("enabled", true));
+        List<String> keys = new ArrayList<>();
+        keys.add("AimA");
+        keys.add("AimB");
+        listList.add(new ConfigKey("key", keys));
+        ConfigWrapper wrapper2 = new ConfigWrapper("list", listList);
+        config.addConfig(wrapper2);
+
         for (String check : checks) {
             Settings settings = wrapper.getSettings(check);
             if (settings.isEnabled()) {

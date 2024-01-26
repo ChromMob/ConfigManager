@@ -19,10 +19,18 @@ public class ConfigKey {
      */
     public ConfigKey(String key, Object value) {
         this.key = key;
-        if (value instanceof List<?>) {
-            List<?> list = (List<?>) value;
-            this.value = null;
-            if (!list.isEmpty()) {
+        try {
+            if (value instanceof List<?>) {
+                List<?> list = (List<?>) value;
+                if (list.isEmpty()) {
+                    this.value = null;
+                    return;
+                }
+                Class<?> clazz = list.get(0).getClass();
+                if (clazz != ConfigKey.class) {
+                    throw new ClassCastException("Cannot cast " + clazz.getName() + " to ConfigKey");
+                }
+                this.value = null;
                 Object first = list.get(0);
                 if (first instanceof ConfigKey) {
                     list.forEach(child -> {
@@ -30,8 +38,10 @@ public class ConfigKey {
                         children.put(configKey.get(), configKey);
                     });
                 }
+            } else {
+                this.value = value;
             }
-        } else {
+        } catch (ClassCastException e) {
             this.value = value;
         }
     }
