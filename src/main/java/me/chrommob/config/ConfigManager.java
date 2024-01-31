@@ -122,8 +122,6 @@ public class ConfigManager {
                         }
                     }
                     keys.put(spaces, key);
-                } else {
-                    System.out.println("Key for line " + line.trim() + " is null (spaces: " + spaces + ")");
                 }
                 writer.write(line + "\n");
             }
