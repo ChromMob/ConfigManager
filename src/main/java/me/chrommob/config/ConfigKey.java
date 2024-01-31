@@ -187,6 +187,27 @@ public class ConfigKey {
         if (value instanceof Integer) {
             return (int) value;
         }
+        if (value instanceof Double) {
+            return ((Double) value).intValue();
+        }
+        if (value instanceof Float) {
+            return ((Float) value).intValue();
+        }
+        if (value instanceof Long) {
+            return ((Long) value).intValue();
+        }
+        if (value instanceof Short) {
+            return ((Short) value).intValue();
+        }
+        if (value instanceof Byte) {
+            return ((Byte) value).intValue();
+        }
+        if (value instanceof Character) {
+            return ((Character) value).charValue();
+        }
+        if (value instanceof Boolean) {
+            return ((Boolean) value).booleanValue() ? 1 : 0;
+        }
         if (value instanceof String) {
             return Integer.parseInt((String) value);
         }
@@ -201,6 +222,27 @@ public class ConfigKey {
         if (value instanceof Double) {
             return (double) value;
         }
+        if (value instanceof Integer) {
+            return ((Integer) value).doubleValue();
+        }
+        if (value instanceof Float) {
+            return ((Float) value).doubleValue();
+        }
+        if (value instanceof Long) {
+            return ((Long) value).doubleValue();
+        }
+        if (value instanceof Short) {
+            return ((Short) value).doubleValue();
+        }
+        if (value instanceof Byte) {
+            return ((Byte) value).doubleValue();
+        }
+        if (value instanceof Character) {
+            return ((Character) value).charValue();
+        }
+        if (value instanceof Boolean) {
+            return ((Boolean) value).booleanValue() ? 1 : 0;
+        }
         if (value instanceof String) {
             return Double.parseDouble((String) value);
         }
@@ -214,6 +256,27 @@ public class ConfigKey {
     public float getAsFloat() {
         if (value instanceof Float) {
             return (float) value;
+        }
+        if (value instanceof Integer) {
+            return ((Integer) value).floatValue();
+        }
+        if (value instanceof Double) {
+            return ((Double) value).floatValue();
+        }
+        if (value instanceof Long) {
+            return ((Long) value).floatValue();
+        }
+        if (value instanceof Short) {
+            return ((Short) value).floatValue();
+        }
+        if (value instanceof Byte) {
+            return ((Byte) value).floatValue();
+        }
+        if (value instanceof Character) {
+            return ((Character) value).charValue();
+        }
+        if (value instanceof Boolean) {
+            return ((Boolean) value).booleanValue() ? 1 : 0;
         }
         if (value instanceof String) {
             return Float.parseFloat((String) value);
