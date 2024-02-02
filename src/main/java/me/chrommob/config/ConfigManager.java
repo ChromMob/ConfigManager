@@ -58,7 +58,7 @@ public class ConfigManager {
         }
     }
 
-    private void loadConfig(String name) {
+    public void loadConfig(String name) {
         File file = new File(configPath, name + ".yml");
         if (!file.exists()) {
             return;
@@ -78,7 +78,7 @@ public class ConfigManager {
         }
     }
 
-    private void saveConfig(String name) {
+    public void saveConfig(String name) {
         File file = new File(configPath, name + ".yml");
         ConfigWrapper configWrapper = getConfigWrapper(name);
         if (configWrapper == null) {
