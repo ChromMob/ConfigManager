@@ -76,11 +76,11 @@ public class ConfigWrapper {
     public void setConfig(Map<String, Object> loadedConfig) {
         loadedConfig.forEach((name, value) -> {
             ConfigKey key = keys.get(name);
-            if (key != null) {
-                key.setValue(value);
-            } else {
+            if (key == null) {
                 addKey(new ConfigKey(name, value));
             }
+            key = keys.get(name);
+            key.setValue(value);
         });
     }
 
