@@ -78,6 +78,8 @@ public class ConfigWrapper {
             ConfigKey key = keys.get(name);
             if (key != null) {
                 key.setValue(value);
+            } else {
+                addKey(new ConfigKey(name, value));
             }
         });
     }
