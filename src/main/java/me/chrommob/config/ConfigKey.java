@@ -133,9 +133,11 @@ public class ConfigKey {
             Map<String, Object> map = (Map<String, Object>) value;
             map.forEach((name, childValue) -> {
                 ConfigKey child = children.get(name);
-                if (child != null) {
-                    child.setValue(childValue);
+                if (child == null) {
+                    children.put(name, new ConfigKey(name, childValue));
+                    child = children.get(name);
                 }
+                child.setValue(childValue);
             });
         } else {
             this.value = value;
