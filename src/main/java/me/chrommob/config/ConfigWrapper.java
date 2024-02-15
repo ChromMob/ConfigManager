@@ -77,7 +77,7 @@ public class ConfigWrapper {
         loadedConfig.forEach((name, value) -> {
             ConfigKey key = keys.get(name);
             if (key == null) {
-                addKey(new ConfigKey(name, value));
+                addKey(new ConfigKey(name, null));
             }
             key = keys.get(name);
             key.setValue(value);
