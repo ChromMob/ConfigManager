@@ -10,8 +10,12 @@ import me.chrommob.config.ConfigWrapper;
 
 public class ConfigTest {
     public static void main(String[] args) {
-        File currentDir = new File(System.getProperty("user.dir"));
+        File currentDir = new File(System.getProperty("user.dir"), "tests");
+        currentDir.mkdirs();
         ConfigManager config = new ConfigManager(currentDir);
+        config.addAnnotatedConfig(AnnotationTest.class);
+        System.out.println("AnnotationTest enabled: " + AnnotationTest.enabled);
+        System.out.println("AnnotationTest complicated: " + AnnotationTest.complicated);
         List<String> checks = new ArrayList<String>() {
             {
                 add("AimA");

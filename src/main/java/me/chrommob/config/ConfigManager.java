@@ -6,7 +6,11 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ConfigManager {
@@ -43,6 +47,60 @@ public class ConfigManager {
         configClasses.put(configWrapper.getName(), configWrapper.getClass());
         loadConfig(configWrapper.getName());
         saveConfig(configWrapper.getName());
+    }
+
+    /**
+     * @param Class of the config you want to get that uses annotations.
+     */
+    public void addAnnotatedConfig(Class<?> configClass) {
+        String name = configClass.getAnnotation(ConfigNameAnnotation.class).value();
+        List<ConfigKey> keys = new ArrayList<>();
+        for (Field field : configClass.getDeclaredFields()) {
+            if (!Modifier.isStatic(field.getModifiers()) || !Modifier.isPublic(field.getModifiers())) {
+                continue;
+            }
+            Object value = null;
+            try {
+                value = field.get(null);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            ConfigFieldAnnotation annotation = field.getAnnotation(ConfigFieldAnnotation.class);
+            if (annotation == null) {
+                continue;
+            }
+            String path = annotation.path();
+            String comment = annotation.comment();
+            List<String> comments = new ArrayList<>();
+            comments.add(comment);
+            if (path.isEmpty()) {
+                path = field.getName();
+            }
+            if (value == null) {
+                value = field.getType().isPrimitive() ? 0 : null;
+            }
+            String[] pathParts = path.split("\\.");
+            ConfigKey parent = null;
+            for (int i = 0; i < pathParts.length; i++) {
+                ConfigKey key;
+                int finalI = i;
+                if (i == 0 && keys.stream().noneMatch(k -> k.get().equals(pathParts[finalI]))) {
+                    key = new ConfigKey(pathParts[i], value, pathParts.length == 1 ? comments : null, pathParts.length == 1 ? field : null);
+                    keys.add(key);
+                } else if (i == 0) {
+                    key = keys.stream().filter(k -> k.get().equals(pathParts[finalI])).findFirst().get();
+                } else if (i == pathParts.length - 1) {
+                    key = new ConfigKey(pathParts[i], value, comments, field);
+                    parent.addChild(key);
+                } else {
+                    key = new ConfigKey(pathParts[i], value, null);
+                    parent.addChild(key);
+                }
+                parent = key;
+            }
+        }
+        ConfigWrapper configWrapper = new ConfigWrapper(name, keys);
+        addConfig(configWrapper);
     }
 
     /**

@@ -1,5 +1,6 @@
 package me.chrommob.config;
 
+import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Map;
 public class ConfigKey {
     private String key;
     private Object value;
+    private Field field;
     List<String> comments;
     private final Map<String, ConfigKey> children = new LinkedHashMap<>();
 
@@ -16,8 +18,11 @@ public class ConfigKey {
      * @param key   The key of the entry in the configuration.
      * @param value The value of the entry. It can be a primitive type (e.g., int,
      *              double) or a list of ConfigKeys.
+     * @param field The field if using annotations.
      */
-    public ConfigKey(String key, Object value) {
+    public ConfigKey(String key, Object value, List<String> comments, Field field) {
+        this.comments = comments;
+        this.field = field;
         this.key = key;
         try {
             if (value instanceof List<?>) {
@@ -47,6 +52,17 @@ public class ConfigKey {
     }
 
     /**
+     * Constructs a new ConfigKey with the specified key and value.
+     *
+     * @param key   The key of the entry in the configuration.
+     * @param value The value of the entry. It can be a primitive type (e.g., int,
+     *              double) or a list of ConfigKeys.
+     */
+    public ConfigKey(String key, Object value) {
+        this(key, value, null, null);
+    }
+
+    /**
      * Constructs a new ConfigKey with the specified key, value and comments.
      *
      * @param key      The key of the entry in the configuration.
@@ -56,8 +72,7 @@ public class ConfigKey {
      * @param comments The comments of the entry in the configuration.
      */
     public ConfigKey(String key, Object value, List<String> comments) {
-        this(key, value);
-        this.comments = comments;
+        this(key, value, comments, null);
     }
 
     /**
@@ -141,6 +156,13 @@ public class ConfigKey {
             });
         } else {
             this.value = value;
+            if (field != null) {
+                try {
+                    field.set(null, value);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
