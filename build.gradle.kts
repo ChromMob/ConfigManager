@@ -31,10 +31,16 @@ tasks.compileJava {
     options.encoding = encoding
 }
 
+val sourceJar = tasks.register<Jar>("sourceJar") {
+    from(sourceSets.main.get().allJava)
+    archiveClassifier.set("sources")
+}
+
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
+            artifact(tasks.named("sourceJar"))
         }
     }
     repositories {
@@ -49,3 +55,4 @@ dependencies {
 tasks.shadowJar {
     relocate("org.yaml", "me.chrommob.config.libs")
 }
+
