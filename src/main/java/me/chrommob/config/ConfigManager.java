@@ -50,11 +50,11 @@ public class ConfigManager {
     }
 
     /**
-     * @param Class of the config you want to get that uses annotations.
+     * @param configClass is the class of the config you want to get that uses annotations.
      */
     public void addAnnotatedConfig(Class<?> configClass) {
         String name = configClass.getAnnotation(ConfigNameAnnotation.class).value();
-        List<ConfigKey> keys = new ArrayList<>();
+        List<ConfigKey<?>> keys = new ArrayList<>();
         for (Field field : configClass.getDeclaredFields()) {
             if (!Modifier.isStatic(field.getModifiers()) || !Modifier.isPublic(field.getModifiers())) {
                 continue;
@@ -80,20 +80,20 @@ public class ConfigManager {
                 value = field.getType().isPrimitive() ? 0 : null;
             }
             String[] pathParts = path.split("\\.");
-            ConfigKey parent = null;
+            ConfigKey<?> parent = null;
             for (int i = 0; i < pathParts.length; i++) {
-                ConfigKey key;
+                ConfigKey<?> key;
                 int finalI = i;
                 if (i == 0 && keys.stream().noneMatch(k -> k.get().equals(pathParts[finalI]))) {
-                    key = new ConfigKey(pathParts[i], value, pathParts.length == 1 ? comments : null, pathParts.length == 1 ? field : null);
+                    key = new ConfigKey<>(pathParts[i], value, pathParts.length == 1 ? comments : null, null, null, pathParts.length == 1 ? field : null);
                     keys.add(key);
                 } else if (i == 0) {
                     key = keys.stream().filter(k -> k.get().equals(pathParts[finalI])).findFirst().get();
                 } else if (i == pathParts.length - 1) {
-                    key = new ConfigKey(pathParts[i], value, comments, field);
+                    key = new ConfigKey<>(pathParts[i], value, comments, null, null, field);
                     parent.addChild(key);
                 } else {
-                    key = new ConfigKey(pathParts[i], value, null);
+                    key = new ConfigKey<>(pathParts[i], value, null);
                     parent.addChild(key);
                 }
                 parent = key;
@@ -149,7 +149,7 @@ public class ConfigManager {
             }
             FileWriter writer = new FileWriter(file);
             String[] lines = yaml.dump(config).split("\n");
-            Map<Integer, ConfigKey> keys = new HashMap<>();
+            Map<Integer, ConfigKey<?>> keys = new HashMap<>();
             for (String line : lines) {
                 int spaces = 0;
                 for (int i = 0; i < line.length(); i++) {
@@ -159,12 +159,12 @@ public class ConfigManager {
                         break;
                     }
                 }
-                ConfigKey key = null;
+                ConfigKey<?> key = null;
                 if (spaces == 0) {
                     key = configWrapper.getKey(line.split(":")[0]);
                 }
                 if (spaces > 0) {
-                    ConfigKey parent = keys.get(spaces - 2);
+                    ConfigKey<?> parent = keys.get(spaces - 2);
                     if (parent != null) {
                         key = parent.getKey(line.split(":")[0].trim());
                     }
@@ -176,7 +176,7 @@ public class ConfigManager {
                             for (int i = 0; i < spaces; i++) {
                                 builder.append(" ");
                             }
-                            writer.write(builder.toString() + "# " + comment + "\n");
+                            writer.write(builder + "# " + comment + "\n");
                         }
                     }
                     keys.put(spaces, key);

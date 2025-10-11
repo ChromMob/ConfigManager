@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class ConfigWrapper {
     private final String name;
-    private final Map<String, ConfigKey> keys = new LinkedHashMap<>();
+    private final Map<String, ConfigKey<?>> keys = new LinkedHashMap<>();
 
     /**
      * Feel free to extend this class and add helper functions the API expects it.
@@ -16,7 +16,7 @@ public class ConfigWrapper {
      *             with that name)
      * @param keys list of config keys
      */
-    public ConfigWrapper(String name, List<ConfigKey> keys) {
+    public ConfigWrapper(String name, List<ConfigKey<?>> keys) {
         this.name = name;
         keys.forEach(this::addKey);
     }
@@ -39,7 +39,7 @@ public class ConfigWrapper {
      * 
      * @param key - ConfigKey that gets added to the config
      */
-    public void addKey(ConfigKey key) {
+    public void addKey(ConfigKey<?> key) {
         if (this.keys.containsKey(key.get())) {
             int numberOfSameKeys = 0;
             for (String keyName : this.keys.keySet()) {
@@ -64,7 +64,7 @@ public class ConfigWrapper {
      * @param key The name of the key you want to get
      * @return ConfigKey representation of it
      */
-    public ConfigKey getKey(String key) {
+    public ConfigKey<?> getKey(String key) {
         return keys.get(key);
     }
 
@@ -73,13 +73,14 @@ public class ConfigWrapper {
      * 
      * @param loadedConfig Sets the raw yaml representation of the config to use.
      */
-    public void setConfig(Map<String, Object> loadedConfig) {
+    protected void setConfig(Map<String, Object> loadedConfig) {
         loadedConfig.forEach((name, value) -> {
-            ConfigKey key = keys.get(name);
+            ConfigKey<Object> key = (ConfigKey<Object>) keys.get(name);
             if (key == null) {
-                addKey(new ConfigKey(name, null));
+                addKey(new ConfigKey<>(name, value.toString()));
+                return;
             }
-            key = keys.get(name);
+            key = (ConfigKey<Object>) keys.get(name);
             key.setValue(value);
         });
     }
@@ -95,7 +96,7 @@ public class ConfigWrapper {
         return config;
     }
 
-    private Map<String, Object> read(ConfigKey key) {
+    private Map<String, Object> read(ConfigKey<?> key) {
         Map<String, Object> config = new LinkedHashMap<>();
         Object value;
         if (!key.getChildren().isEmpty()) {
@@ -108,7 +109,7 @@ public class ConfigWrapper {
                 }
             });
         } else {
-            value = key.getAsObject();
+            value = key.getValue();
         }
         config.put(key.get(), value);
         return config;

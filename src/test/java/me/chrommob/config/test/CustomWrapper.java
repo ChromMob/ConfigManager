@@ -9,39 +9,16 @@ public class CustomWrapper extends ConfigWrapper {
         super(name);
     }
 
-    public CustomWrapper(String name, List<ConfigKey> keys) {
+    public CustomWrapper(String name, List<ConfigKey<?>> keys) {
         super(name, keys);
     }
 
     public Settings getSettings(String check) {
-        ConfigKey data = getKey("checks").getKey(check);
-        boolean enabled = data.getKey("enabled").getAsBoolean();
-        int value = data.getKey("value").getAsInt();
-        String command = data.getKey("command").getAsString();
+        ConfigKey<?> data = getKey("checks").getKey(check);
+        boolean enabled = (boolean) data.getKey("enabled").getValue();
+        int value = (int) data.getKey("value").getValue();
+        String command = data.getKey("command").getValueAsString();
         return new Settings(enabled, value, command);
     }
 }
 
-class Settings {
-    private boolean enabled;
-    private int value;
-    private String command;
-
-    public Settings(boolean enabled, int value, String command) {
-        this.enabled = enabled;
-        this.value = value;
-        this.command = command;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public int getValue() {
-        return value;
-    }
-
-    public String getCommand() {
-        return command;
-    }
-}

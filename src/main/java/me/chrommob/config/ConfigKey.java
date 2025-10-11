@@ -4,13 +4,44 @@ import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
-public class ConfigKey {
-    private String key;
+public class ConfigKey<T> {
+    private final String key;
     private Object value;
-    private Field field;
+    private final Function<T, String> serializer;
+    private final Function<String, T> deserializer;
+    private final Field field;
     List<String> comments;
-    private final Map<String, ConfigKey> children = new LinkedHashMap<>();
+    private final Map<String, ConfigKey<?>> children = new LinkedHashMap<>();
+
+    public ConfigKey(String key, List<ConfigKey<?>> value, List<String> comments) {
+        this.serializer = null;
+        this.deserializer = null;
+        this.comments = comments;
+        this.key = key;
+        this.field = null;
+        if (value.isEmpty()) {
+            this.value = null;
+            return;
+        }
+        Class<?> clazz = value.get(0).getClass();
+        if (clazz != ConfigKey.class) {
+            throw new ClassCastException("Cannot cast " + clazz.getName() + " to ConfigKey");
+        }
+        this.value = null;
+        ConfigKey<?> first = value.get(0);
+        if (first != null) {
+            value.forEach(child -> {
+                children.put(child.get(), child);
+            });
+        }
+    }
+
+    public ConfigKey(String key, List<ConfigKey<?>> value) {
+        this(key, value, null);
+    }
 
     /**
      * Constructs a new ConfigKey with the specified key and value.
@@ -20,47 +51,57 @@ public class ConfigKey {
      *              double) or a list of ConfigKeys.
      * @param field The field if using annotations.
      */
-    public ConfigKey(String key, Object value, List<String> comments, Field field) {
+    protected ConfigKey(String key, T value, List<String> comments, Function<T, String> serializer, Function<String, T> deserializer, Field field) {
+        if (value instanceof List) {
+            List<?> list = (List<?>) value;
+            Object first = ((List<?>) value).get(0);
+            if (first instanceof ConfigKey) {
+                this.serializer = null;
+                this.deserializer = null;
+                this.comments = comments;
+                this.key = key;
+                this.field = null;
+                this.value = null;
+                for (Object child : list) {
+                    ConfigKey<?> configKey = (ConfigKey<?>) child;
+                    this.children.put(configKey.get(), configKey);
+                }
+                return;
+            }
+        }
+        this.serializer = serializer;
+        this.deserializer = deserializer;
         this.comments = comments;
         this.field = field;
         this.key = key;
-        try {
-            if (value instanceof List<?>) {
-                List<?> list = (List<?>) value;
-                if (list.isEmpty()) {
-                    this.value = null;
-                    return;
-                }
-                Class<?> clazz = list.get(0).getClass();
-                if (clazz != ConfigKey.class) {
-                    throw new ClassCastException("Cannot cast " + clazz.getName() + " to ConfigKey");
-                }
-                this.value = null;
-                Object first = list.get(0);
-                if (first instanceof ConfigKey) {
-                    list.forEach(child -> {
-                        ConfigKey configKey = (ConfigKey) child;
-                        children.put(configKey.get(), configKey);
-                    });
-                }
-            } else {
-                this.value = value;
-            }
-        } catch (ClassCastException e) {
+        if (serializer != null) {
+            this.value = serializer.apply(value);
+        } else {
             this.value = value;
         }
     }
 
-    /**
-     * Constructs a new ConfigKey with the specified key and value.
-     *
-     * @param key   The key of the entry in the configuration.
-     * @param value The value of the entry. It can be a primitive type (e.g., int,
-     *              double) or a list of ConfigKeys.
-     */
-    public ConfigKey(String key, Object value) {
-        this(key, value, null, null);
+    public ConfigKey(String key, T value, List<String> comments, Function<T, String> serializer, Function<String, T> deserializer) {
+        this(key, value, comments, serializer, deserializer, null);
     }
+
+    public ConfigKey(String key, T value, Function<T, String> serializer, Function<String, T> deserializer) {
+        this(key, value, null, serializer, deserializer, null);
+    }
+
+    public ConfigKey(String key, T value, List<String> comments) {
+        this(key, value, comments, null, null, null);
+    }
+
+    public ConfigKey(String key, T value) {
+        this(key, value, null);
+    }
+
+    public ConfigKey(String key, Integer value, List<String> comments) {
+        this(key, ((T) value), comments, null, (Function<String, T>) deserializeInteger, null);
+    }
+
+    private static final Function<String, Integer> deserializeInteger = s -> Integer.parseInt(deleteIf(s, c -> !Character.isDigit(c)));
 
     /**
      * Constructs a new ConfigKey with the specified key, value and comments.
@@ -71,13 +112,148 @@ public class ConfigKey {
      *                 double) or a list of ConfigKeys.
      * @param comments The comments of the entry in the configuration.
      */
-    public ConfigKey(String key, Object value, List<String> comments) {
-        this(key, value, comments, null);
+    public ConfigKey(String key, String value, List<String> comments) {
+        this(key, (T) value, comments, null, null, null);
+    }
+
+    /**
+     * Constructs a new ConfigKey with the specified key and value.
+     *
+     * @param key   The key of the entry in the configuration.
+     * @param value The value of the entry. It can be a primitive type (e.g., int,
+     *              double) or a list of ConfigKeys.
+     */
+    public ConfigKey(String key, String value) {
+        this(key, value, null);
+    }
+
+    public ConfigKey(String key, Double value, List<String> comments) {
+        this(key, ((T) value), comments, null, (Function<String, T>) deserializeDouble, null);
+    }
+
+    private static final Function<String, Double> deserializeDouble = s -> Double.parseDouble(removeDoubleDots(filterOut(s)));
+
+    public ConfigKey(String key, Double value) {
+        this(key, value, null);
+    }
+
+    public ConfigKey(String key, Long value, List<String> comments) {
+        this(key, ((T) value), comments, null,  (Function<String, T>) deserializeLong, null);
+    }
+
+    private static final Function<String, Long> deserializeLong  = s -> Long.parseLong(deleteIf(s, c -> !Character.isDigit(c)));
+
+    public ConfigKey(String key, Long value) {
+        this(key, value, null);
+    }
+
+    public ConfigKey(String key, Float value, List<String> comments) {
+        this(key, ((T) value), comments, null, (Function<String, T>) deserializeFloat, null);
+    }
+
+    private static final Function<String, Float> deserializeFloat = s -> Float.parseFloat(removeDoubleDots(filterOut(s)));
+
+    private static String removeDoubleDots(String toRemove) {
+        boolean hadDot = false;
+        StringBuilder removed = new StringBuilder();
+        for (char c : toRemove.toCharArray()) {
+            if (Character.isDigit(c)) {
+                removed.append(c);
+            }
+            if (c == '.' && !hadDot) {
+                hadDot = true;
+                removed.append('.');
+            }
+        }
+        return removed.toString();
+    }
+
+    private static String filterOut(String numberWithChars) {
+        StringBuilder filtered = new StringBuilder();
+        boolean decimalDotUsed = false;
+        boolean decimalCommaUsed = false;
+        for (int i = 0; i < numberWithChars.length(); i++) {
+            char ch = numberWithChars.charAt(i);
+            if (Character.isDigit(ch)) {
+                filtered.append(ch);
+            }
+            if (ch == '.') {
+                decimalDotUsed = true;
+                filtered.append(ch);
+            }
+            if (ch  == ',') {
+                decimalCommaUsed = true;
+                filtered.append(ch);
+            }
+        }
+        if (decimalDotUsed && decimalCommaUsed) {
+            return deleteIf(filtered, c -> c == ',');
+        }
+        if (decimalCommaUsed) {
+            return filtered.toString().replaceAll(",", ".");
+        }
+        return filtered.toString();
+    }
+
+    private static String deleteIf(StringBuilder filtered, Predicate<Character> predicate) {
+        return deleteIf(filtered.toString(), predicate);
+    }
+
+    private static String deleteIf(String old, Predicate<Character> condition) {
+        StringBuilder res = new StringBuilder();
+        for (int i = 0; i < old.length(); i++) {
+            char ch = old.charAt(i);
+            if (condition.test(ch)) continue;
+            res.append(ch);
+        }
+        return res.toString();
+    }
+
+    public ConfigKey(String key, Float value) {
+        this(key, value, null);
+    }
+
+    public ConfigKey(String key, Boolean value, List<String> comments) {
+        this(key, (T) value, comments, null, (Function<String, T>) deserializeBoolean, null);
+    }
+
+    private static final Function<String, Boolean> deserializeBoolean = o -> {
+        int trueDistance = getDistance("true", o);
+        int falseDistance = getDistance("false", o);
+        return trueDistance >= falseDistance;
+    };
+
+    private static int getDistance(String expected, String real) {
+        int number = 0;
+        int location = 0;
+        for (int i = 0; i < real.length(); i++) {
+            if (expected.length() - 1 == location) {
+                return number;
+            }
+            if (real.length() - 1 == location) {
+                return number;
+            }
+            char expectedChar = expected.charAt(location);
+            char realChar = real.charAt(location);
+            if (expectedChar == realChar) {
+                number += 1;
+            }
+            location += 1;
+        }
+        return number;
+    }
+
+    public ConfigKey(String key, Boolean value) {
+        this(key, value, null);
+    }
+
+    public ConfigKey(String key, List<T> value, List<String> comments, Function<T, String> serializer, Function<String, T> deserializer, Field field) {
+        this(key, ((T) value), comments, serializer, deserializer, field);
     }
 
     /**
      * Creates a clone of the ConfigKey with a new name.
-     *
+     * <p>
      * This method is useful when you have multiple ConfigKeys with the same key and
      * you want to create a copy of the ConfigKey with a different name.
      *
@@ -85,36 +261,36 @@ public class ConfigKey {
      * @return A new ConfigKey instance with the specified name and the same value
      *         and children as the original ConfigKey.
      */
-    public ConfigKey clone(String newName) {
-        ConfigKey key = new ConfigKey(newName, value);
+    public ConfigKey<T> clone(String newName) {
+        ConfigKey<T> key = new ConfigKey<>(newName, (T) value, comments, serializer, deserializer, field);
         children.forEach((name, child) -> key.addChild(child.clone(name)));
         return key;
     }
 
     /**
      * Adds a child ConfigKey to the current ConfigKey.
-     *
+     * <p>
      * This method is mostly for internal use and is used to add a child ConfigKey
      * to the current ConfigKey's collection of children.
      *
      * @param child The child ConfigKey to be added.
      */
-    public void addChild(ConfigKey child) {
+    public void addChild(ConfigKey<?> child) {
         children.put(child.get(), child);
     }
 
     /**
      * Retrieves the children of the current ConfigKey.
-     *
+     * <p>
      * This method returns a map of the child ConfigKey instances associated with
      * the current ConfigKey. The keys of the map represent the names of the child
      * ConfigKeys, and the values represent the corresponding child ConfigKey
      * objects.
      *
      * @return A map of the child ConfigKey instances associated with the current
-     *         ConfigKey.
+     * ConfigKey.
      */
-    public Map<String, ConfigKey> getChildren() {
+    public Map<String, ConfigKey<?>> getChildren() {
         return children;
     }
 
@@ -130,45 +306,57 @@ public class ConfigKey {
      * @return The child ConfigKey with the specified key, or null if no such child
      *         ConfigKey exists.
      */
-    public ConfigKey getKey(String key) {
-        return children.get(key);
+    public <V> ConfigKey<V> getKey(String key) {
+        ConfigKey<?> child = children.get(key);
+        if (child == null) {
+            return null;
+        }
+        if (child.getClass() != ConfigKey.class) {
+            throw new ClassCastException("Cannot cast " + child.getClass().getName() + " to ConfigKey");
+        }
+        return (ConfigKey<V>) child;
     }
 
-    /**
+        /**
      * Modifies the value of the ConfigKey.
-     *
-     * This method is used to update the value of the ConfigKey. If the new value is
-     * a map, it recursively updates the values of the child ConfigKeys as well. If
-     * the new value is not a map, it updates the value of the current ConfigKey.
+     * <p>
+     * This method is used to update the value of the ConfigKey. It updates the value of the current ConfigKey.
      *
      * @param value The new value of the ConfigKey.
      */
-    public void setValue(Object value) {
+    public void setValue(T value) {
         if (value instanceof Map) {
-            Map<String, Object> map = (Map<String, Object>) value;
-            map.forEach((name, childValue) -> {
-                ConfigKey child = children.get(name);
-                if (child == null) {
-                    children.put(name, new ConfigKey(name, childValue));
-                    child = children.get(name);
+            Map<?, ?> rawCast = (Map<?, ?>) value;
+            if (rawCast.isEmpty()) {
+                return;
+            }
+            rawCast.entrySet().stream().findFirst().ifPresent(entry -> {
+                if  (entry.getKey() instanceof String) {
+                    Map<String, Object> casted = (Map<String, Object>) value;
+                    for  (Map.Entry<String, Object> castedEntry : casted.entrySet()) {
+                        ((ConfigKey<Object>) children.get(castedEntry.getKey())).setValue(castedEntry.getValue());
+                    }
                 }
-                child.setValue(childValue);
             });
-        } else {
+
+        }
+        if (serializer == null) {
             this.value = value;
-            if (field != null) {
-                try {
-                    field.set(null, value);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+            return;
+        }
+        this.value = serializer.apply(value);
+        if (field != null) {
+            try {
+                field.set(null, value);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
             }
         }
     }
 
     /**
      * Retrieves the key of the ConfigKey.
-     *
+     * <p>
      * This method returns the key associated with the current ConfigKey instance.
      * The key represents the identifier or name of the ConfigKey in the
      * configuration.
@@ -180,153 +368,25 @@ public class ConfigKey {
     }
 
     /**
-     * Retrieves the raw object value of the ConfigKey.
+     * Retrieves the value of the ConfigKey.
+     * <p>
+     * This method returns the value associated with the current ConfigKey instance.
      *
-     * This method returns the raw object value associated with the current
-     * ConfigKey instance. The raw object value can be of any type and may require
-     * manual casting to the desired type.
-     *
-     * @return The raw object value of the ConfigKey.
+     * @return The value of the ConfigKey.
      */
-    public Object getAsObject() {
-        return value;
+    public T getValue() {
+        if (deserializer == null) {
+            return (T) value;
+        }
+        return deserializer.apply(value.toString());
     }
 
     /**
      * @return String representation of the Object or String itself if the value is
      *         String
      */
-    public String getAsString() {
-        if (value instanceof String) {
-            return (String) value;
-        }
+    public String getValueAsString() {
         return value.toString();
-    }
-
-    /**
-     * @return The value parsed as int.
-     * @throws ClassCastException If Object cant be cast.
-     */
-    public int getAsInt() {
-        if (value instanceof Integer) {
-            return (int) value;
-        }
-        if (value instanceof Double) {
-            return ((Double) value).intValue();
-        }
-        if (value instanceof Float) {
-            return ((Float) value).intValue();
-        }
-        if (value instanceof Long) {
-            return ((Long) value).intValue();
-        }
-        if (value instanceof Short) {
-            return ((Short) value).intValue();
-        }
-        if (value instanceof Byte) {
-            return ((Byte) value).intValue();
-        }
-        if (value instanceof Character) {
-            return ((Character) value).charValue();
-        }
-        if (value instanceof Boolean) {
-            return ((Boolean) value).booleanValue() ? 1 : 0;
-        }
-        if (value instanceof String) {
-            return Integer.parseInt((String) value);
-        }
-        throw new ClassCastException("Cannot cast " + value.getClass().getName() + " to int");
-    }
-
-    /**
-     * @return The value parsed as double.
-     * @throws ClassCastException If Object cant be cast.
-     */
-    public double getAsDouble() {
-        if (value instanceof Double) {
-            return (double) value;
-        }
-        if (value instanceof Integer) {
-            return ((Integer) value).doubleValue();
-        }
-        if (value instanceof Float) {
-            return ((Float) value).doubleValue();
-        }
-        if (value instanceof Long) {
-            return ((Long) value).doubleValue();
-        }
-        if (value instanceof Short) {
-            return ((Short) value).doubleValue();
-        }
-        if (value instanceof Byte) {
-            return ((Byte) value).doubleValue();
-        }
-        if (value instanceof Character) {
-            return ((Character) value).charValue();
-        }
-        if (value instanceof Boolean) {
-            return ((Boolean) value).booleanValue() ? 1 : 0;
-        }
-        if (value instanceof String) {
-            return Double.parseDouble((String) value);
-        }
-        throw new ClassCastException("Cannot cast " + value.getClass().getName() + " to double");
-    }
-
-    /**
-     * @return The value parsed as float.
-     * @throws ClassCastException If Object cant be cast.
-     */
-    public float getAsFloat() {
-        if (value instanceof Float) {
-            return (float) value;
-        }
-        if (value instanceof Integer) {
-            return ((Integer) value).floatValue();
-        }
-        if (value instanceof Double) {
-            return ((Double) value).floatValue();
-        }
-        if (value instanceof Long) {
-            return ((Long) value).floatValue();
-        }
-        if (value instanceof Short) {
-            return ((Short) value).floatValue();
-        }
-        if (value instanceof Byte) {
-            return ((Byte) value).floatValue();
-        }
-        if (value instanceof Character) {
-            return ((Character) value).charValue();
-        }
-        if (value instanceof Boolean) {
-            return ((Boolean) value).booleanValue() ? 1 : 0;
-        }
-        if (value instanceof String) {
-            return Float.parseFloat((String) value);
-        }
-        throw new ClassCastException("Cannot cast " + value.getClass().getName() + " to float");
-    }
-
-    /**
-     * @return Simple cast of the object to provided type.
-     */
-    public <T> T getAsType(Class<T> type) throws ClassCastException {
-        return type.cast(value);
-    }
-
-    /**
-     * @return The value parsed as boolean.
-     * @throws ClassCastException If Object cant be cast.
-     */
-    public boolean getAsBoolean() {
-        if (value instanceof Boolean) {
-            return (boolean) value;
-        }
-        if (value instanceof String) {
-            return Boolean.parseBoolean((String) value);
-        }
-        throw new ClassCastException("Cannot cast " + value.getClass().getName() + " to boolean");
     }
 
     public List<String> getComments() {
