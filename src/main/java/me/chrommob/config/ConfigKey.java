@@ -101,7 +101,7 @@ public class ConfigKey<T> {
         this(key, ((T) value), comments, null, (Function<String, T>) deserializeInteger, null);
     }
 
-    private static final Function<String, Integer> deserializeInteger = (final String s) -> Integer.parseInt(deleteIf(s, c -> !Character.isDigit(c)));
+    private static final Function<String, Integer> deserializeInteger = s -> Integer.parseInt(deleteIf(s, c -> !Character.isDigit(c)));
 
     /**
      * Constructs a new ConfigKey with the specified key, value and comments.
@@ -131,7 +131,7 @@ public class ConfigKey<T> {
         this(key, ((T) value), comments, null, (Function<String, T>) deserializeDouble, null);
     }
 
-    private static final Function<String, Double> deserializeDouble = (final String s) -> Double.parseDouble(removeDoubleDots(filterOut(s)));
+    private static final Function<String, Double> deserializeDouble = s -> Double.parseDouble(removeDoubleDots(filterOut(s)));
 
     public ConfigKey(String key, Double value) {
         this(key, value, null);
@@ -141,7 +141,7 @@ public class ConfigKey<T> {
         this(key, ((T) value), comments, null,  (Function<String, T>) deserializeLong, null);
     }
 
-    private static final Function<String, Long> deserializeLong = (final String s) -> Long.parseLong(deleteIf(s, c -> !Character.isDigit(c)));
+    private static final Function<String, Long> deserializeLong  = s -> Long.parseLong(deleteIf(s, c -> !Character.isDigit(c)));
 
     public ConfigKey(String key, Long value) {
         this(key, value, null);
@@ -151,7 +151,7 @@ public class ConfigKey<T> {
         this(key, ((T) value), comments, null, (Function<String, T>) deserializeFloat, null);
     }
 
-    private static final Function<String, Float> deserializeFloat = (final String s) -> Float.parseFloat(removeDoubleDots(filterOut(s)));
+    private static final Function<String, Float> deserializeFloat = s -> Float.parseFloat(removeDoubleDots(filterOut(s)));
 
     private static String removeDoubleDots(String toRemove) {
         boolean hadDot = false;
