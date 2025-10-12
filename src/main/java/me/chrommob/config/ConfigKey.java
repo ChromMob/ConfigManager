@@ -325,7 +325,7 @@ public class ConfigKey<T> {
         return (ConfigKey<V>) child;
     }
 
-    protected void loadValue(Object value) {
+    public void loadValue(Object value) {
         if (value instanceof Map) {
             Map<?, ?> rawCast = (Map<?, ?>) value;
             if (rawCast.isEmpty()) {
