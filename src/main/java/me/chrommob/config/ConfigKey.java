@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 
 public class ConfigKey<T> {
     private final String key;
-    private Object value;
+    private T value;
     private final Function<T, String> serializer;
     private final Function<String, T> deserializer;
     private final Field field;
@@ -34,7 +34,7 @@ public class ConfigKey<T> {
         ConfigKey<?> first = value.get(0);
         if (first != null) {
             value.forEach(child -> {
-                children.put(child.get(), child);
+                children.put(child.getKey(), child);
             });
         }
     }
@@ -64,21 +64,29 @@ public class ConfigKey<T> {
                 this.value = null;
                 for (Object child : list) {
                     ConfigKey<?> configKey = (ConfigKey<?>) child;
-                    this.children.put(configKey.get(), configKey);
+                    this.children.put(configKey.getKey(), configKey);
                 }
                 return;
             }
         }
+        if (value instanceof Boolean) {
+            this.deserializer = (Function<String, T>) deserializeBoolean;
+        } else if (value instanceof Long) {
+            this.deserializer = (Function<String, T>) deserializeLong;
+        } else if (value instanceof Integer) {
+            this.deserializer = (Function<String, T>) deserializeInteger;
+        } else if (value instanceof Float) {
+            this.deserializer = (Function<String, T>) deserializeFloat;
+        } else if (value instanceof Double) {
+            this.deserializer = (Function<String, T>) deserializeDouble;
+        } else {
+            this.deserializer = deserializer;
+        }
         this.serializer = serializer;
-        this.deserializer = deserializer;
         this.comments = comments;
         this.field = field;
         this.key = key;
-        if (serializer != null) {
-            this.value = serializer.apply(value);
-        } else {
-            this.value = value;
-        }
+        this.value = value;
     }
 
     public ConfigKey(String key, T value, List<String> comments, Function<T, String> serializer, Function<String, T> deserializer) {
@@ -276,7 +284,7 @@ public class ConfigKey<T> {
      * @param child The child ConfigKey to be added.
      */
     public void addChild(ConfigKey<?> child) {
-        children.put(child.get(), child);
+        children.put(child.getKey(), child);
     }
 
     /**
@@ -317,14 +325,7 @@ public class ConfigKey<T> {
         return (ConfigKey<V>) child;
     }
 
-        /**
-     * Modifies the value of the ConfigKey.
-     * <p>
-     * This method is used to update the value of the ConfigKey. It updates the value of the current ConfigKey.
-     *
-     * @param value The new value of the ConfigKey.
-     */
-    public void setValue(T value) {
+    protected void loadValue(Object value) {
         if (value instanceof Map) {
             Map<?, ?> rawCast = (Map<?, ?>) value;
             if (rawCast.isEmpty()) {
@@ -334,17 +335,27 @@ public class ConfigKey<T> {
                 if  (entry.getKey() instanceof String) {
                     Map<String, Object> casted = (Map<String, Object>) value;
                     for  (Map.Entry<String, Object> castedEntry : casted.entrySet()) {
-                        ((ConfigKey<Object>) children.get(castedEntry.getKey())).setValue(castedEntry.getValue());
+                        children.get(castedEntry.getKey()).loadValue(castedEntry.getValue());
                     }
                 }
             });
+        }
+        if (deserializer != null) {
+            setValue(deserializer.apply(value.toString()));
+        } else {
+            setValue((T) value);
+        }
+    }
 
-        }
-        if (serializer == null) {
-            this.value = value;
-            return;
-        }
-        this.value = serializer.apply(value);
+        /**
+     * Modifies the value of the ConfigKey.
+     * <p>
+     * This method is used to update the value of the ConfigKey. It updates the value of the current ConfigKey.
+     *
+     * @param value The new value of the ConfigKey.
+     */
+    public void setValue(T value) {
+        this.value = value;
         if (field != null) {
             try {
                 field.set(null, value);
@@ -363,7 +374,7 @@ public class ConfigKey<T> {
      *
      * @return The key of the ConfigKey.
      */
-    public String get() {
+    public String getKey() {
         return key;
     }
 
@@ -375,10 +386,7 @@ public class ConfigKey<T> {
      * @return The value of the ConfigKey.
      */
     public T getValue() {
-        if (deserializer == null) {
-            return (T) value;
-        }
-        return deserializer.apply(value.toString());
+        return value;
     }
 
     /**
@@ -386,10 +394,28 @@ public class ConfigKey<T> {
      *         String
      */
     public String getValueAsString() {
-        return value.toString();
+        if (serializer == null) {
+            if (value instanceof String) {
+                return (String) value;
+            }
+            return value.toString();
+        }
+        return serializer.apply(value);
+    }
+
+    public Object getSerializedIfNeeded() {
+        if  (serializer == null) {
+            return value;
+        }
+        return serializer.apply(value);
     }
 
     public List<String> getComments() {
         return comments;
+    }
+
+    @Override
+    public String toString() {
+        return key + "=" + getValueAsString();
     }
 }

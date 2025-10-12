@@ -84,11 +84,11 @@ public class ConfigManager {
             for (int i = 0; i < pathParts.length; i++) {
                 ConfigKey<?> key;
                 int finalI = i;
-                if (i == 0 && keys.stream().noneMatch(k -> k.get().equals(pathParts[finalI]))) {
+                if (i == 0 && keys.stream().noneMatch(k -> k.getKey().equals(pathParts[finalI]))) {
                     key = new ConfigKey<>(pathParts[i], value, pathParts.length == 1 ? comments : null, null, null, pathParts.length == 1 ? field : null);
                     keys.add(key);
                 } else if (i == 0) {
-                    key = keys.stream().filter(k -> k.get().equals(pathParts[finalI])).findFirst().get();
+                    key = keys.stream().filter(k -> k.getKey().equals(pathParts[finalI])).findFirst().get();
                 } else if (i == pathParts.length - 1) {
                     key = new ConfigKey<>(pathParts[i], value, comments, null, null, field);
                     parent.addChild(key);

@@ -3,6 +3,7 @@ package me.chrommob.config.test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import me.chrommob.config.ConfigKey;
 import me.chrommob.config.ConfigManager;
@@ -148,6 +149,28 @@ public class ConfigTest {
                 System.out.println(check + " is disabled");
             }
         }
+
+        class Test {
+            private final String name;
+
+            Test(String name) {
+                this.name = name;
+            }
+
+            public String getName() {
+                return name;
+            }
+        }
+        List<ConfigKey<?>> keys1 = new ArrayList<>();
+        Function<String, Test> deserializer = Test::new;
+        Function<Test, String> serializer = Test::getName;
+        ConfigKey<Test> key1 = new ConfigKey<>("value", new Test("test"), serializer, deserializer);
+        keys1.add(key1);
+        ConfigWrapper customType = new ConfigWrapper("customType", keys1);
+
+        config.addConfig(customType);
+
+        System.out.println(key1.getValue().name);
     }
 
     public static List<ConfigKey<?>> settingConfigKeys() {

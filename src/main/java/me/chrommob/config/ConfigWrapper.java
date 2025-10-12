@@ -40,17 +40,17 @@ public class ConfigWrapper {
      * @param key - ConfigKey that gets added to the config
      */
     public void addKey(ConfigKey<?> key) {
-        if (this.keys.containsKey(key.get())) {
+        if (this.keys.containsKey(key.getKey())) {
             int numberOfSameKeys = 0;
             for (String keyName : this.keys.keySet()) {
-                if (keyName.equals(key.get())) {
+                if (keyName.equals(key.getKey())) {
                     numberOfSameKeys++;
                 }
             }
-            String keyName = key.get() + "_" + numberOfSameKeys;
+            String keyName = key.getKey() + "_" + numberOfSameKeys;
             this.keys.put(keyName, key.clone(keyName));
         } else
-            this.keys.put(key.get(), key);
+            this.keys.put(key.getKey(), key);
     }
 
     /**
@@ -81,7 +81,7 @@ public class ConfigWrapper {
                 return;
             }
             key = (ConfigKey<Object>) keys.get(name);
-            key.setValue(value);
+            key.loadValue(value);
         });
     }
 
@@ -109,9 +109,9 @@ public class ConfigWrapper {
                 }
             });
         } else {
-            value = key.getValue();
+            value = key.getSerializedIfNeeded();
         }
-        config.put(key.get(), value);
+        config.put(key.getKey(), value);
         return config;
     }
 }
