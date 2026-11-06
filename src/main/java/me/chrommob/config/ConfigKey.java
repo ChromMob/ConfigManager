@@ -1,15 +1,21 @@
 package me.chrommob.config;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class ConfigKey<T> {
     private final String key;
     private T value;
+    private T defaultValue;
+    /** False for keys found in the file that the code did not declare; they are kept as they are. */
+    private boolean declared = true;
     private final Function<T, String> serializer;
     private final Function<String, T> deserializer;
     private final Field field;
@@ -52,7 +58,7 @@ public class ConfigKey<T> {
      * @param field The field if using annotations.
      */
     protected ConfigKey(String key, T value, List<String> comments, Function<T, String> serializer, Function<String, T> deserializer, Field field) {
-        if (value instanceof List) {
+        if (value instanceof List && !((List<?>) value).isEmpty()) {
             List<?> list = (List<?>) value;
             Object first = ((List<?>) value).get(0);
             if (first instanceof ConfigKey) {
@@ -87,6 +93,7 @@ public class ConfigKey<T> {
         this.field = field;
         this.key = key;
         this.value = value;
+        this.defaultValue = value;
     }
 
     public ConfigKey(String key, T value, List<String> comments, Function<T, String> serializer, Function<String, T> deserializer) {
@@ -288,6 +295,17 @@ public class ConfigKey<T> {
     }
 
     /**
+     * Removes a child, for example one a newer version no longer uses, so the next save drops it
+     * from the file.
+     *
+     * @param key The name of the child to remove.
+     * @return the removed child, or null if there was none.
+     */
+    public ConfigKey<?> removeChild(String key) {
+        return children.remove(key);
+    }
+
+    /**
      * Retrieves the children of the current ConfigKey.
      * <p>
      * This method returns a map of the child ConfigKey instances associated with
@@ -325,26 +343,69 @@ public class ConfigKey<T> {
         return (ConfigKey<V>) child;
     }
 
+    /**
+     * Loads the value read from the file. Keys inside a section that the code did not declare,
+     * such as entries the user names themselves, are kept as they are, so saving never loses
+     * them. An empty value, or a key missing from its section, goes back to its default.
+     *
+     * @throws IllegalArgumentException naming every key whose value could not be read; the
+     *                                  other keys are still loaded.
+     */
     public void loadValue(Object value) {
+        List<String> problems = new ArrayList<>();
+        load(value, key, problems);
+        if (!problems.isEmpty()) {
+            throw new IllegalArgumentException(String.join("; ", problems));
+        }
+    }
+
+    void load(Object value, String path, List<String> problems) {
+        if (value == null) {
+            reset();
+            return;
+        }
         if (value instanceof Map) {
-            Map<?, ?> rawCast = (Map<?, ?>) value;
-            if (rawCast.isEmpty()) {
-                return;
-            }
-            rawCast.entrySet().stream().findFirst().ifPresent(entry -> {
-                if  (entry.getKey() instanceof String) {
-                    Map<String, Object> casted = (Map<String, Object>) value;
-                    for  (Map.Entry<String, Object> castedEntry : casted.entrySet()) {
-                        children.get(castedEntry.getKey()).loadValue(castedEntry.getValue());
-                    }
+            Set<String> names = new HashSet<>();
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+                String name = String.valueOf(entry.getKey());
+                names.add(name);
+                ConfigKey<?> child = children.get(name);
+                if (child == null) {
+                    children.put(name, fromFile(name, entry.getValue()));
+                } else {
+                    child.load(entry.getValue(), path + "." + name, problems);
                 }
-            });
+            }
+            children.values().removeIf(child -> !child.declared && !names.contains(child.key));
+            for (ConfigKey<?> child : children.values()) {
+                if (!names.contains(child.key)) {
+                    child.reset();
+                }
+            }
         }
-        if (deserializer != null) {
-            setValue(deserializer.apply(value.toString()));
-        } else {
-            setValue((T) value);
+        try {
+            setValue(deserializer == null ? (T) value : deserializer.apply(value.toString()));
+        } catch (RuntimeException e) {
+            problems.add(path + " (" + value + " is not a valid value)");
         }
+    }
+
+    /** Puts the value, and those of the declared children, back to the default; drops undeclared children. */
+    void reset() {
+        setValue(defaultValue);
+        children.values().removeIf(child -> !child.declared);
+        children.values().forEach(ConfigKey::reset);
+    }
+
+    boolean isDeclared() {
+        return declared;
+    }
+
+    /** A key found in the file that the code did not declare, kept with the value it has there. */
+    static ConfigKey<Object> fromFile(String name, Object value) {
+        ConfigKey<Object> key = new ConfigKey<>(name, value, null, null, null, null);
+        key.declared = false;
+        return key;
     }
 
         /**

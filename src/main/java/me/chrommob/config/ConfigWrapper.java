@@ -1,8 +1,11 @@
 package me.chrommob.config;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ConfigWrapper {
     private final String name;
@@ -54,6 +57,17 @@ public class ConfigWrapper {
     }
 
     /**
+     * Removes a key, for example one a newer version no longer uses, so the next save drops it
+     * from the file.
+     *
+     * @param key The name of the key to remove
+     * @return the removed key, or null if there was none
+     */
+    public ConfigKey<?> removeKey(String key) {
+        return keys.remove(key);
+    }
+
+    /**
      * @return name of the config
      */
     public String getName() {
@@ -70,19 +84,32 @@ public class ConfigWrapper {
 
     /**
      * This should not be used by user.
-     * 
+     * Keys the code did not declare are kept as they are in the file; declared keys missing
+     * from it go back to their defaults.
+     *
      * @param loadedConfig Sets the raw yaml representation of the config to use.
+     * @return the keys whose values could not be read (they keep their previous values).
      */
-    protected void setConfig(Map<String, Object> loadedConfig) {
-        loadedConfig.forEach((name, value) -> {
-            ConfigKey<Object> key = (ConfigKey<Object>) keys.get(name);
+    protected List<String> setConfig(Map<?, ?> loadedConfig) {
+        List<String> problems = new ArrayList<>();
+        Set<String> names = new HashSet<>();
+        for (Map.Entry<?, ?> entry : loadedConfig.entrySet()) {
+            String name = String.valueOf(entry.getKey());
+            names.add(name);
+            ConfigKey<?> key = keys.get(name);
             if (key == null) {
-                addKey(new ConfigKey<>(name, value.toString()));
-                return;
+                keys.put(name, ConfigKey.fromFile(name, entry.getValue()));
+            } else {
+                key.load(entry.getValue(), name, problems);
             }
-            key = (ConfigKey<Object>) keys.get(name);
-            key.loadValue(value);
-        });
+        }
+        keys.values().removeIf(key -> !key.isDeclared() && !names.contains(key.getKey()));
+        for (ConfigKey<?> key : keys.values()) {
+            if (!names.contains(key.getKey())) {
+                key.reset();
+            }
+        }
+        return problems;
     }
 
     /**
